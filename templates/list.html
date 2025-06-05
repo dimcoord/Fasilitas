@@ -6,8 +6,34 @@
 
 {% block content %}
 <div class="content">
-    <h1>Daftar Fasilitas</h1>
-    <p>Apalah</p>
+    <p>Halo, {{ username }}</p>
     <a href="{{ url_for('logout') }}">Logout</a>
+    <h1>Daftar Fasilitas</h1>
+    
+    {% if is_admin %}
+    <a href="{{ url_for('tambah') }}">Tambah fasilitas</a>
+    {% endif %}
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Nama Fasilitas</th>
+            <th>Jumlah tersedia</th>
+            <th>Jumlah total</th>
+            <th>Aksi</th>
+        </tr>
+        {% for item in fasilitas %}
+        <tr>
+            <td>{{ item.id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.available_amount }}</td>
+            <td>{{ item.total_amount }}</td>
+            <td>
+                <a href="">Pinjam</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
 </div>
 {% endblock %}

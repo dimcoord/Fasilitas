@@ -4,8 +4,8 @@ from flask_login import UserMixin, LoginManager, login_user, logout_user, login_
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms import StringField, PasswordField, IntegerField, SubmitField
+from wtforms.validators import InputRequired, Length, NumberRange, ValidationError
 from datetime import datetime
 from dotenv import load_dotenv
 import os
@@ -37,6 +37,40 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return '<Task %r>' % self.id
 
+class Fasilitas(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    available_amount = db.Column(db.Integer, nullable=False)
+    total_amount = db.Column(db.Integer, nullable=False)
+    is_deleted = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reservasi = db.relationship('Reservasi', backref='fasilitas', lazy=True)
+    
+    def __repr__(self):
+        return '<Task %r>' % self.id
+    
+class Peminjaman(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, nullable=False)
+    total_amount = db.Column(db.Integer, nullable=False)
+    is_deleted = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reservasi = db.relationship('Reservasi', backref='peminjaman', lazy=True)
+    
+    def __repr__(self):
+        return '<Task %r>' % self.id
+    
+class Reservasi(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    peminjaman_id = db.Column(db.Integer, db.ForeignKey('peminjaman.id'), nullable=False)
+    fasilitas_id = db.Column(db.Integer, db.ForeignKey('fasilitas.id'), nullable=False)
+    amount = db.Column(db.Integer, nullable=False)
+    is_deleted = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return '<Task %r>' % self.id
+
 with app.app_context():
     db.create_all()
     print(">>>Database tables checked/created.<<<")
@@ -44,7 +78,7 @@ with app.app_context():
 class RegisterForm(FlaskForm):
     username = StringField(validators=[InputRequired(), Length(
         min=4, max=20)], render_kw={'placeholder': 'Username'})
-    password = StringField(validators=[InputRequired(), Length(
+    password = PasswordField(validators=[InputRequired(), Length(
         min=4, max=20)], render_kw={'placeholder': 'Password'})
     phone_number = StringField(validators=[InputRequired(), Length(
         min=10, max=15)], render_kw={'placeholder': 'No. WhatsApp Aktif'})
@@ -58,9 +92,22 @@ class RegisterForm(FlaskForm):
 class LoginForm(FlaskForm):
     username = StringField(validators=[InputRequired(), Length(
         min=4, max=20)], render_kw={'placeholder': 'Username'})
-    password = StringField(validators=[InputRequired(), Length(
+    password = PasswordField(validators=[InputRequired(), Length(
         min=4, max=20)], render_kw={'placeholder': 'Password'})
     submit = SubmitField('Login')
+    
+class AddFacilityForm(FlaskForm):
+    name = StringField(validators=[InputRequired(), Length(
+        min=4, max=50)], render_kw={'placeholder': 'Nama fasilitas'})
+    total_amount = IntegerField(validators=[InputRequired(), NumberRange(
+        min=1, max=100)], render_kw={'placeholder': 'Jumlah total'})
+    available_amount = IntegerField(validators=[InputRequired(), NumberRange(
+        min=1, max=100)], render_kw={'placeholder': 'Jumlah tersedia'})
+    submit = SubmitField('Tambahkan')
+    
+    def validate_available_amount(self, field):
+        if self.total_amount.data is not None and field.data > self.total_amount.data:
+            raise ValidationError('Fasilitas tersedia tidak boleh lebih dari total!')
 
 @app.route("/")
 def index():
@@ -71,12 +118,12 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        if user:
+        if user and not user.is_deleted:
             if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
-                redirect(url_for('list'))
+                return redirect(url_for("list"))
             else:
-                print('Try again')
+                return '<p>Username/password salah!</p>'
 
     return render_template('login.html', form=form)
 
@@ -101,12 +148,23 @@ def register():
 @app.route("/list", methods=['POST', 'GET'])
 @login_required
 def list():
-    return render_template('list.html')
+    username = current_user.username
+    is_admin = current_user.is_admin
+    fasilitas = Fasilitas.query.order_by(Fasilitas.id).all()
+    return render_template('list.html', fasilitas=fasilitas, is_admin=is_admin, username=username)
 
-@app.route("/pinjam", methods=['POST', 'GET'])
+@app.route("/tambah", methods=['POST', 'GET'])
 @login_required
-def pinjam():
-    if request.method == 'POST':
-        pass
+def tambah():
+    form = AddFacilityForm()
+    
+    if form.validate_on_submit():
+        new_facility = Fasilitas(name=form.name.data, available_amount=form.available_amount.data, total_amount=form.total_amount.data)
+        db.session.add(new_facility)
+        db.session.commit()
+        return redirect(url_for('list'))
+    
+    if current_user.is_admin:
+        return render_template('tambah.html', form=form)
     else:
-        return render_template('pinjam.html')
+        return redirect(url_for('list'))

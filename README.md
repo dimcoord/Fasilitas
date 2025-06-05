@@ -29,7 +29,7 @@ erDiagram
         int is_deleted
         datetime created_at
     }
-    Transaksi {
+    Reservasi {
         int id
         int peminjaman_id
         int fasilitas_id

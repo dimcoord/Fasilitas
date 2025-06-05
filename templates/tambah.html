@@ -6,21 +6,20 @@
 
 {% block content %}
 <div class="content">
-    <h1>Buat akun</h1>
+    <h1>Tambah Fasilitas</h1>
 
     <form method="POST" action="">
         {{ form.hidden_tag() }}
-        {{ form.username }}
-        {{ form.password }}
-        {{ form.phone_number }}
+        {{ form.name }}
+        {{ form.available_amount }}
+        {{ form.total_amount }}
         {{ form.submit }}
     </form>
-
-    {% for error in form.username.errors %}
+    
+    {% for error in form.available_amount.errors %}
         <p style="color: red;">{{ error }}</p>
     {% endfor %}
 
     
-    <a href="{{ url_for('login') }}">Sudah punya akun? Klik untuk login.</a>
 </div>
 {% endblock %}
