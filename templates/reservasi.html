@@ -9,10 +9,6 @@
     <p>Halo, {{ username }}</p>
     <a href="{{ url_for('logout') }}">Logout</a>
     <h1>Daftar Fasilitas</h1>
-    
-    {% if is_admin %}
-    <a href="{{ url_for('tambah') }}">Tambah fasilitas</a>
-    {% endif %}
 
     <table>
         <tr>
@@ -22,18 +18,14 @@
             <th>Jumlah total</th>
             <th>Aksi</th>
         </tr>
-        {% for item in fasilitas %}
+        {% for item in reservasi %}
         <tr>
             <td>{{ item.id }}</td>
-            <td>{{ item.name }}</td>
-            <td>{{ item.available_amount }}</td>
-            <td>{{ item.total_amount }}</td>
+            <td>{{ item.user_id }}</td>
+            <td>{{ item.fasilitas_id }}</td>
+            <td>{{ item.created_at }}</td>
             <td>
-                <a href="{{ url_for('list_detail', fasilitas_id=item.id)}}">Pinjam</a>
-                {% if is_admin %}
-                <a href="{{ url_for('edit', fasilitas_id=item.id) }}">Edit</a>
-                <a href="{{ url_for('delete', fasilitas_id=item.id) }}">Hapus</a>
-                {% endif %}
+                <a href="{{ url_for('reservasi_delete', reservasi_id=item.id) }}">Hapus</a>
             </td>
         </tr>
         {% endfor %}

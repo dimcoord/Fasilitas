@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Pinjam{% endblock %}
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+<div class="content">
+    <h1>Peminjaman fasilitas</h1>
+    <p>ID: {{ fasilitas.id }}</p>
+    <p>Nama: {{ fasilitas.name }}</p>
+    <p>Jumlah tersedia: {{ fasilitas.available_amount }}</p>
+    <p>Jumlah total: {{ fasilitas.total_amount }}</p>
+    <a href="{{ url_for('pinjam', fasilitas_id=fasilitas.id)}}">Pinjam sekarang!</a>
+</div>
+{% endblock %}

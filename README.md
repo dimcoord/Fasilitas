@@ -14,13 +14,6 @@ erDiagram
         int is_deleted
         datetime created_at
     }
-    Peminjaman {
-        int id PK
-        date order_date
-        int total_amount
-        int is_deleted
-        datetime created_at
-    }
     Fasilitas {
         int id PK
         string name
@@ -31,16 +24,16 @@ erDiagram
     }
     Reservasi {
         int id
-        int peminjaman_id
-        int fasilitas_id
+        int user_id FK
+        int fasilitas_id FK
         int amount
         int is_deleted
         datetime created_at
     }
     
     User ||--o{ Peminjaman : membuat
-    Peminjaman ||--o{ Transaksi : berisi
-    Fasilitas ||--o{ Transaksi : berada_dalam
+    Peminjaman ||--o{ Reservasi : berisi
+    Fasilitas ||--o{ Reservasi : berada_dalam
 ```
 
 ## 1. Cara instal
